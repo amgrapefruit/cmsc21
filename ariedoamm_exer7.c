@@ -17,6 +17,7 @@ void start(char *name, int *num);
 void inputNames(char **names, int num);
 void flames(char *n1, char *n2, int index);
 void freeStringArray(char **mat, int size);
+void deleteCharByIndex(char *c, int index);
 
 int main() {
     int choice = 0; // for user input
@@ -31,6 +32,7 @@ int main() {
     char **names; // string array for crush names
     names = (char **) malloc(crush_num * sizeof(char *));
 
+    // infinite loop until input 0
     while (1) {
         choice = menu();
 
@@ -58,7 +60,7 @@ int main() {
         }
     }  
 
-    freeStringArray(names, crush_num);
+    freeStringArray(names, crush_num); // free memory for arrays
     return 0;
 }
 
@@ -89,8 +91,6 @@ void start(char *name, int *num) {
 }
 
 void inputNames(char **names, int num) {
-    // allocate memory for string array
-    // names = (char **) malloc(num * sizeof(char *));
     // populate string array
     for (int i = 0; i < num; i++) {
         // allocate memory for string
@@ -121,7 +121,6 @@ void flames(char *n1, char *n2, int index) {
             continue;
         }
 
-                //printf("n1 : %c\n", name1[i]);
         name1[i] = tolower(name1[i]);
 
         // find a similar char in second string
@@ -129,7 +128,6 @@ void flames(char *n1, char *n2, int index) {
             if (!isalpha(name2[j])){
                 continue;
             }
-                //printf("n2 %i: %c\n", j,name2[j]);
 
             name2[j] = tolower(name2[j]);
 
@@ -159,7 +157,40 @@ void flames(char *n1, char *n2, int index) {
         }
     }
 
-    printf("Remaining character count: %i\n\n", count);
+    printf("Remaining character count: %i\n", count);
+    
+    char flam[] = "flames";
+    
+    
+    // delete char in flames until one char remains
+    while (strlen(flam) > 1) {
+        deleteCharByIndex(flam, (count % strlen(flam) - 1));
+    }
+    
+    printf("FLAMES results: ");
+    
+    switch (*flam) {
+        case 'f':
+            printf("FRIENDS\n");
+            break;
+        case 'l':
+            printf("LOVE\n");
+            break;
+        case 'a':
+            printf("AFFECTION\n");
+            break;
+        case 'm':
+            printf("MARRIAGE\n");
+            break;
+        case 'e':
+            printf("ENEMY\n");
+            break;
+        case 's':
+            printf("SIBLINGS\n");
+            break;
+    }
+    
+    printf("\n");
 }
 
 void freeStringArray(char **mat, int n) {
@@ -169,3 +200,21 @@ void freeStringArray(char **mat, int n) {
 
     free(mat);
 }
+
+void deleteCharByIndex(char *s, int index) {
+    // loop thru chars in string until index
+    int j = 0;
+    
+    // catch negative index
+    if (index < 0) index = strlen(s) - 1;
+    
+    for (int i = j; i < strlen(s); i++) {
+        // copy all chars other than the one in index
+        if (i != index) {
+            s[j++] = s[i];
+        }
+    }
+    
+    s[j] = '\0'; // add terminating char
+}
+
