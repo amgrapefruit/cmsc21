@@ -21,25 +21,24 @@ int main() {
     int names_filled = 0; // true or false if names array is filled
 
     int crush_num = 0; // for num of crushes
-    char **names; // string array for crush names
     char *my_name; // string for own name
-
+    my_name = (char *) malloc(STRLENGTH * sizeof(char));
+    
     start(my_name, &crush_num);
+    
+    char **names; // string array for crush names
+    names = (char **) malloc(crush_num * sizeof(char *));
 
     while (1) {
         choice = menu();
 
-    printf("%sAAAAA\n", my_name);
         if (choice == 1) {
             // add names
             inputNames(names, crush_num);
             names_filled = 1;
         } else if (choice == 2 && names_filled == 1) {
             // iterate over all crush names
-    printf("%s\n", my_name);
             for (int i = 0; i < crush_num; i++) {
-                
-    printf("%s\n", my_name);
                 flames(my_name, names[i], i+1);
             }
         } else if (choice == 0) {
@@ -71,30 +70,22 @@ int menu(){
     printf("Choice: ");
 
     int choice = 0;
-    scanf("%i", &choice);
+    scanf("%i%*c", &choice); // consume leftover new-line char
     printf("\n");
-    scanf("%c"); // use new-line character to avoid skipping input
 
     return choice;
 }
 
 // ask for user name and number of crushes
 void start(char *name, int *num) {
-    // allocate memory for string
-    name = (char *) malloc(STRLENGTH * sizeof(char));
-
     printf("Enter your name: ");
     scanf("%[^\n]%*c", name);
-    printf("%s in func\n", name);
 
     printf("Enter the number of your crushes: ");
     scanf("%i", num);
 }
 
 void inputNames(char **names, int num) {
-    // allocate memory for string array
-    names = (char **) malloc(num * sizeof(char *));
-
     // populate string array
     for (int i = 0; i < num; i++) {
         // allocate memory for string
@@ -109,15 +100,14 @@ void inputNames(char **names, int num) {
 }
 
 void flames(char *n1, char *n2, int index) {
-    printf("Crush #%i: %s\n", index, n1);
+    printf("Crush #%i: %s\n", index, n2);
 
     // copy strings
     char name1[50];
     char name2[50];
-    printf("a");
+    
     strcpy(name1, n1);
     strcpy(name2, n2);
-    printf("b");
 
     // iterate over all characters in first name
     for (int i = 0; i < strlen(name1); i++) {
