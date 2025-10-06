@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 /**
  * Author: Aaron Michael M. Ariedo
  * Date: 5 October 2025
@@ -111,7 +113,7 @@ void flames(char *n1, char *n2, int index) {
     
     strcpy(name1, n1);
     strcpy(name2, n2);
-    printf("%s %s\n", name1, name2);
+    
     // iterate over all characters in first name
     for (int i = 0; i < strlen(name1); i++) {
         // skip on all non alphabets
@@ -133,7 +135,6 @@ void flames(char *n1, char *n2, int index) {
 
             if (name1[i] == name2[j]) {
                 // remove similar characters
-                printf("%c %c\n", name1[i], name2[j]);
                 name1[i] = ' ';
                 name2[j] = ' ';
                 break;
@@ -141,31 +142,24 @@ void flames(char *n1, char *n2, int index) {
         }
     }
 
-    // copy all alphabetic characters into new string
-    char result[50];
+    // count all alphanetic characters
+    int count = 0;
 
-    for (int i = 0, j = 0; i < strlen(name1) - 1; i++) {
-        if (name1[i] == '\0') break;
-        
+    for (int i = 0; i < strlen(name1); i++) {
         // check if alphabet
         if (isalpha(name1[i])) {
-            result[j] = name1[i];
-            j++;
+            count++;
         }
     }
 
-    for (int i = 0, j = strlen(result); i < strlen(name2); i++) {
-        if (name2[i] == '\0') break;
-        
+    for (int i = 0; i < strlen(name2); i++) {
         // check if alphabet
         if (isalpha(name2[i])) {
-            result[j] = name2[i];
-            j++;
+            count++;
         }
     }
-    printf("%s %s\n", name1, name2);
 
-    printf("Remaining character count: %i %s\n", strlen(result), result);
+    printf("Remaining character count: %i\n\n", count);
 }
 
 void freeStringArray(char **mat, int n) {
