@@ -32,8 +32,8 @@ void deleteItem(struct Item* items, int *);
 void viewItems(struct Item* items, int *);
 void viewBuyers(struct Buyer* buyers, int *);
 void save(struct Item* items, struct Buyer* buyers, int *, int *);
-void load(struct Item* items, struct Buyer* buyers);
-void findItem(struct Item* items, char *name, struct Item *item_found, int *);
+void load(struct Item* items, struct Buyer* buyers, int *, int *);
+void findItem(struct Item* items, char *name, struct Item **item_found, int *);
 
 int main() {
     // arrays for items and buyers
@@ -46,7 +46,7 @@ int main() {
     int buyer_count = 0;
 
     // load any saved file
-    //load(items, buyers);
+    load(items, buyers, &item_count, &buyer_count);
 
     int choice = 0; // for user input
 
@@ -78,10 +78,6 @@ int main() {
         case 6:
             viewBuyers(buyers, &buyer_count);
             break;
-            
-        case 7:
-            save(items, buyers, &item_count, &buyer_count);
-            break;
         
         default:
             break;
@@ -90,6 +86,7 @@ int main() {
     } while (choice != 7);
 
     printf("You have exited.\n");
+    save(items, buyers, &item_count, &buyer_count);
 
     return 0;
 }
@@ -130,6 +127,14 @@ void addItem(struct Item* items, int *item_count) {
     printf("\nEnter item name: ");
     scanf("%[^\n]%*c", item_name);
 
+    // check if item already exists
+    struct Item *item; // item pointer
+    findItem(items, item_name, &item, item_count);
+    if (item != NULL) {
+        printf("\nGrocery item already exists!\n");
+        return;
+    }
+
     printf("Enter price: ");
     scanf("%d", &price);
 
@@ -137,20 +142,14 @@ void addItem(struct Item* items, int *item_count) {
     scanf("%d", &stock);
     printf("\n");
 
-    // iterate over items array
-    // check if item already exists
-    for (int i = 0; i < 10; i++) {
-        if (strcmp(items[i].name, item_name) == 0) {
-            printf("Item already exists!\n\n");
-            return;
-        }
-    }
-
     // no duplicate item and there is still available space
+    // add item to array
     strcpy(items[*item_count].name, item_name);
     items[*item_count].price = price;
     items[*item_count].stock = stock;
     (*item_count)++;
+
+    printf("Successfully added grocery item!\n");
 }  
 
 // have a buyer buy an item
@@ -180,9 +179,6 @@ void buyItem(struct Item* items, struct Buyer* buyers, int *item_count, int *buy
         return;
     }
 
-    // initialize item bought count for new buyers
-    if (index == *buyer_count) buyers[index].num_of_bought_items = 0;
-
     // check if buyer can still buy more items
     if (buyers[index].num_of_bought_items == 5){
         printf("\n%s cannot buy any more items!\n", buyers[index].name);
@@ -205,36 +201,106 @@ void buyItem(struct Item* items, struct Buyer* buyers, int *item_count, int *buy
         printf("\nGrocery item not found!\n");
         return;
     }
-    printf("%iaaaa\n", choice);
 
     // check if enough stock
     if (items[choice-1].stock == 0) {
         printf("\n%s is out of stock!\n", items[choice-1].name);
         return;
     }
-    printf("%ibbb\n", choice);
+
+
+    // initialize new buyers
+    if (index == *buyer_count) {
+        buyers[index].num_of_bought_items = 0;
+        buyers[index].total_cost = 0;
+        (*buyer_count)++;
+    }
 
     // update buyer
     strcpy(buyers[index].name, buyer_name);
     buyers[index].bought_items[ buyers[index].num_of_bought_items ] = items[choice-1];
     buyers[index].total_cost += items[choice-1].price;
-    buyers[index].num_of_bought_items++;
+    buyers[index].num_of_bought_items += 1;
+
+    items[choice-1].stock--; // decrement stock
+
+    printf("\nSuccessfully bought grocery item: %s!\n", items[choice-1].name);
 }
 
 // edit an existing item
 void editItem(struct Item* items, int *item_count) {
+    
+    // ask user for item name
+    printf("\nEnter grocery item name: ");
+    char item_name[50];
+    scanf("%[^\n]%*c", item_name);
 
+    // find item that matches
+    struct Item *item; // item pointer
+    findItem(items, item_name, &item, item_count);
+
+    // check if item not found
+    if (item == NULL) {
+        printf("\nItem was not found!\n");
+        return;
+    }
+
+    // item was found
+    // ask for new item details
+    int price = 0;
+    int stock = 0;
+
+    printf("Enter new price: ");
+    scanf("%i", &price);
+
+    printf("Enter new stock: ");
+    scanf("%i", &stock);
+
+    // update item
+    item->price = price;
+    item->stock = stock;
+
+    printf("\nGrocery Item Details Successfully Edited!\n");
 }
 
 // delete an existing item
 void deleteItem(struct Item* items, int *item_count) {
+    
+    // ask user for item name
+    printf("\nEnter grocery item name: ");
+    char item_name[50];
+    scanf("%[^\n]%*c", item_name);
 
+    // find item that matches
+    struct Item *item; // item pointer
+    findItem(items, item_name, &item, item_count);
+
+    // check if item not found
+    if (item == NULL) {
+        printf("\nItem was not found!\n");
+        return;
+    }
+
+    // item was found
+    // iterate over items array
+    int j = 0;
+    for (int i = j; i < *item_count; i++) {
+
+        // copy all items onto item array again except item to be deleted
+        if (strcmp(items[i].name, item_name) != 0) {
+            items[j++] = items[i];
+        }
+    }
+
+    (*item_count)--;
+
+    printf("\nSuccessfully deleted an item!\n");
 }
 
 // print all items
 void viewItems(struct Item* items, int *item_count) {
     if (*item_count == 0) {
-        printf("\nThere are current no grocery items.\n");
+        printf("\nThere are currently no grocery items.\n");
         return;
     }
 
@@ -248,11 +314,14 @@ void viewItems(struct Item* items, int *item_count) {
 
 // print all buyers
 void viewBuyers(struct Buyer* buyers, int *buyer_count) {
-    printf("\n");
+    // check if there are any buyers
+    if (*buyer_count == 0) {
+        printf("\nThere are no buyers yet!\n");
+    }
 
     // iterate over array of buyers
     for (int i = 0; i < *buyer_count; i++) {
-        printf("Customer Name: %s\n", buyers[i].name);
+        printf("\nCustomer Name: %s\n", buyers[i].name);
         printf("Grocery Items bought:\n");
 
         // iterate over all items bought by buyer
@@ -267,65 +336,115 @@ void viewBuyers(struct Buyer* buyers, int *buyer_count) {
 // save items and buyers
 void save(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_count) {
 
+    // check if there is data to be saved
+    if (*item_count == 0 && *buyer_count == 0) {
+        printf("\nThere is no data that can be saved\n");
+    }
+
+    // save items
+    FILE *items_fptr = fopen("items.txt", "w");
+
+    // iterate over items array
+    for (int i = 0; i < *item_count; i++) {
+        // write each item to save file
+        fprintf(items_fptr, "%s,%d,%d\n", items[i].name, items[i].price, items[i].stock);
+    }
+
+    fclose(items_fptr);
+
+    // save buyers
+    FILE *buyers_fptr = fopen("buyers.txt", "w");
+
+    // iterate over items array
+    for (int i = 0; i < *buyer_count; i++) {
+        // write each buyer to save file
+        fprintf(buyers_fptr, "%s,%d,%d\n", buyers[i].name, buyers[i].num_of_bought_items, buyers[i].total_cost);
+
+        // write each item bought to save file
+        for (int j = 0; j < buyers[i].num_of_bought_items; j++) {
+            fprintf(buyers_fptr, "%s\n", buyers[i].bought_items[j].name);
+        }
+    }
+
+    fclose(buyers_fptr);
 }
 
 // load items and buyers
-void load(struct Item* items, struct Buyer* buyers) {
-    FILE* fptr = fopen("items.txt", "r");
+void load(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_count) {
+    FILE* items_fptr = fopen("items.txt", "r");
 
     // check if file is found
-    if (fptr == NULL) {
+    if (items_fptr == NULL) {
         printf("Found no save file");
         return;
     }
 
     int check = 0;
-    int item_count = 0;
     struct Item *item; // buffer
 
     // populate Items array
     for (int i = 0; i < 10; i++) {
-        item = &items[i];
-        check = fscanf(fptr, "%s,%d,%d", item->name, &(item->price), &(item->stock));
-        item_count++;
+        item = &(items[i]);
+        check = fscanf(items_fptr, "%s,%d,%d", item->name, &(item->price), &(item->stock));
+        (*item_count)++;
 
         // end of file
         if (check == 0) break;
     }
 
-    fclose(fptr);
+    fclose(items_fptr);
 
-    fopen("buyers.txt", "r");
+    FILE *buyers_fptr = fopen("buyers.txt", "r");
 
     // check if file is found
-    if (fptr == NULL) {
+    if (buyers_fptr == NULL) {
         printf("Found no save file");
         return;
     }
 
     struct Buyer *buyer; // buffer
-    char item_name[50];
+    char item_name[50]; // buffer
+    struct Item *buyer_item;
     check = 0;
 
     // populate Buyers array
     for (int i = 0; i < 10; i++) {
         buyer = &(buyers[i]);
-        check = fscanf(fptr, "%s,%d,%d", buyer->name, &(buyer->num_of_bought_items), &(buyer->total_cost));
+        check = fscanf(buyers_fptr, "%s,%d,%d", buyer->name, &(buyer->num_of_bought_items), &(buyer->total_cost));
 
         // end of file
         if (check == 0) break;
 
         // get the items bought
         for (int j = 0; j < (buyer->num_of_bought_items); j++) {
-            fscanf(fptr, "%s", item_name);
-            findItem(items, item_name, &(buyer->bought_items[j]), &item_count);
+            fscanf(buyers_fptr, "%s", item_name);
+            findItem(items, item_name, &buyer_item, item_count);
+            
+            // add item to buyer's item list
+            buyer->bought_items[j] = *buyer_item;
+        }
+
+        (*buyer_count)++;
+    }
+
+    fclose(buyers_fptr);
+}
+
+// find item from items array, pass-by reference
+void findItem(struct Item* items, char *name, struct Item **item_found, int *item_count) {
+    
+    // iterate over all arrays
+    for (int i = 0; i < *item_count; i++) {
+        
+        // item name matches
+        if (strcmp(name, items[i].name) == 0) {
+            *item_found = &(items[i]);
+            return;
         }
     }
 
-    fclose(fptr);
-}
-
-void findItem(struct Item* items, char *name, struct Item *item_found, int *item_count) {
-
+    // no match was found
+    *item_found = NULL;
+    return;
 }
 
