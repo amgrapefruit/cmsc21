@@ -379,18 +379,22 @@ void load(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
         return;
     }
 
-    int check = 0;
-    struct Item *item; // buffer
+    // buffers for item fields
+    char item_name[50];
+    int item_price = 0;
+    int item_stock = 0;
+    int item_index = 0;
 
     // populate Items array
-    for (int i = 0; i < 10; i++) {
-        item = &(items[i]);
-        check = fscanf(items_fptr, "%s,%d,%d", item->name, &(item->price), &(item->stock));
-        (*item_count)++;
-
-        // end of file
-        if (check == 0) break;
+    while (fscanf(items_fptr, "%s,%d,%d", item_name, item_price, item_stock) > 0) {
+        
+        // copy all fields
+        strcpy(items[item_index].name, item_name);
+        items[item_index].price = item_price;
+        items[item_index].stock = item_stock;
+        item_index++;
     }
+    
 
     fclose(items_fptr);
 
@@ -402,12 +406,43 @@ void load(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
         return;
     }
 
-    struct Buyer *buyer; // buffer
-    char item_name[50]; // buffer
-    struct Item *buyer_item;
-    check = 0;
+    // buffers for items and buyers
+    char buyer_name[50];
+    int buyer_num_of_bought_items = 0;
+    int buyer_total_cost = 0;
+    int buyer_index = 0;
+
+    strcpy(item_name, "");
+    struct Item *item;
+
+    int check = 0;
 
     // populate Buyers array
+    while (fscanf(buyers_fptr, "%s,%d,%d", buyer_name, buyer_num_of_bought_items, buyer_total_cost) > 0){
+
+        // copy buyer fields
+        strcpy(buyers[buyer_index].name, buyer_name);
+        buyers[buyer_index].num_of_bought_items = buyer_num_of_bought_items;
+        buyers[buyer_index].total_cost = buyer_total_cost;
+
+        // copy items bought
+        for (int i = 0; i < buyer_num_of_bought_items; i++) {
+            fscanf(buyers_fptr, "%s", item_name);
+            findItem(items, item_name, &item, item_count);
+
+            buyers[buyer_index].bought_items[i] = *item;
+        }
+
+        buyer_index++;
+    }
+
+    // update array sizes
+    *item_count = item_index;
+    *buyer_count = buyer_index;
+
+    fclose(buyers_fptr);
+}
+/*
     for (int i = 0; i < 10; i++) {
         buyer = &(buyers[i]);
         check = fscanf(buyers_fptr, "%s,%d,%d", buyer->name, &(buyer->num_of_bought_items), &(buyer->total_cost));
@@ -429,7 +464,7 @@ void load(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
 
     fclose(buyers_fptr);
 }
-
+*/
 // find item from items array, pass-by reference
 void findItem(struct Item* items, char *name, struct Item **item_found, int *item_count) {
     
