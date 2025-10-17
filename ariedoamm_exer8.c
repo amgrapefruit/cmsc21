@@ -347,7 +347,7 @@ void save(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
     // iterate over items array
     for (int i = 0; i < *item_count; i++) {
         // write each item to save file
-        fprintf(items_fptr, "%s,%d,%d\n", items[i].name, items[i].price, items[i].stock);
+        fprintf(items_fptr, "%s %d %d\n", items[i].name, items[i].price, items[i].stock);
     }
 
     fclose(items_fptr);
@@ -358,7 +358,7 @@ void save(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
     // iterate over items array
     for (int i = 0; i < *buyer_count; i++) {
         // write each buyer to save file
-        fprintf(buyers_fptr, "%s,%d,%d\n", buyers[i].name, buyers[i].num_of_bought_items, buyers[i].total_cost);
+        fprintf(buyers_fptr, "%s %d %d\n", buyers[i].name, buyers[i].num_of_bought_items, buyers[i].total_cost);
 
         // write each item bought to save file
         for (int j = 0; j < buyers[i].num_of_bought_items; j++) {
@@ -386,7 +386,7 @@ void load(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
     int item_index = 0;
 
     // populate Items array
-    while (fscanf(items_fptr, "%s,%d,%d", item_name, item_price, item_stock) > 0) {
+    while (fscanf(items_fptr, "%s %d %d", item_name, &item_price, &item_stock) > 0) {
         
         // copy all fields
         strcpy(items[item_index].name, item_name);
@@ -418,7 +418,7 @@ void load(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
     int check = 0;
 
     // populate Buyers array
-    while (fscanf(buyers_fptr, "%s,%d,%d", buyer_name, buyer_num_of_bought_items, buyer_total_cost) > 0){
+    while (fscanf(buyers_fptr, "%s %d %d", buyer_name, &buyer_num_of_bought_items, &buyer_total_cost) > 0){
 
         // copy buyer fields
         strcpy(buyers[buyer_index].name, buyer_name);
@@ -429,8 +429,17 @@ void load(struct Item* items, struct Buyer* buyers, int *item_count, int *buyer_
         for (int i = 0; i < buyer_num_of_bought_items; i++) {
             fscanf(buyers_fptr, "%s", item_name);
             findItem(items, item_name, &item, item_count);
+            
+            // check if item was deleted
+            if (item == NULL) {
+                
+                // add name and garbage values for price and stock
+                strcpy(buyers[buyer_index].bought_items[i].name, item_name);
+                buyers[buyer_index].bought_items[i].price = 0;
+                buyers[buyer_index].bought_items[i].stock = 0;
+            }
 
-            buyers[buyer_index].bought_items[i] = *item;
+            else buyers[buyer_index].bought_items[i] = *item;
         }
 
         buyer_index++;
