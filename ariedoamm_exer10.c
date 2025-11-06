@@ -35,7 +35,8 @@ typedef struct buyer_tag {
 // function declarations
 int menu();
 void addItem(groceryItems **grocery_head);
-void viewItems(groceryItems **grocery_head);
+void viewItems(groceryItems *grocery_head);
+void buyItem(buyer **buyers_head, groceryItems *grocery_head);
 
 int main() {
 
@@ -67,7 +68,7 @@ int main() {
             break;
             
         case 5:
-            viewItems(&grocery_head);
+            viewItems(grocery_head);
             break;
             
         case 6:
@@ -184,16 +185,16 @@ void addItem(groceryItems **head) {
 }
 
 // print all grocery items
-void viewItems(groceryItems **head) {
+void viewItems(groceryItems *head) {
 
     // check if no item exists
-    if (*head == NULL) {
+    if (head == NULL) {
         printf("\nThere are no grocery items available!\n");
         return;
     }
 
     // traverse linked list
-    groceryItems *ptr = *head;
+    groceryItems *ptr = head;
 
     while (ptr != NULL) {
         printf("\nGrocery Item: %s\n", ptr->item_name);
@@ -202,4 +203,87 @@ void viewItems(groceryItems **head) {
 
         ptr = ptr->nextItem;
     }
+}
+
+// have a buyer buy a grocery item
+void buyItem(buyer **buyers_head, groceryItems *grocery_head) {
+
+    // ask user for buyer name
+    char name[30];
+    printf("\nEnter customer name: ");
+    scanf("%s", name);
+
+    // display item choices
+    printf("\n-------- GROCERY ITEMS AVAILABLE --------\n");
+
+    // traverse grocery items linked list
+    groceryItems *item_ptr = grocery_head;
+    for (int i = 1; item_ptr != NULL; i++) {
+
+        // display item details
+        printf("[%i] %s - %i\n", i, item_ptr->item_name, item_ptr->price);
+
+        // go next
+        item_ptr = item_ptr->nextItem;
+    }
+
+    // ask user item choice
+    int choice = 0;
+    printf("\nEnter grocery item to buy: ");
+    scanf("%i", &choice);
+
+    // check if item exists
+    int found = 0;
+    item_ptr = grocery_head;
+    for (int i = 1; item_ptr != NULL; i++) {
+
+        // check for match
+        if (choice == i) {
+            found = 1;
+            break;
+        }
+
+        // go next
+        item_ptr = item_ptr->nextItem;
+    }
+
+    // item not found
+    if (found == 0) {
+        printf("\nGrocery item not found!\n");
+        return;
+    }
+
+    buyer *new_buyer;
+    new_buyer = (buyer *) malloc(sizeof(buyer));
+    strcpy(new_buyer->name, name);
+    new_buyer->groceryItemsBought = item_ptr;
+    new_buyer->total_cost = item_ptr->price;
+    new_buyer->nextBuyer = NULL;
+
+    // traverse buyer linked list
+    buyer *buyer_ptr = *buyers_head;
+
+    do {
+        // check if first buyer
+        if (*buyers_head == NULL) {
+            *buyers_head = new_buyer;
+            break;
+        }
+
+        // check for matching buyer
+        if (strcmp(buyer_ptr->name, name) == 0) {
+            buyer_ptr->total_cost += new_buyer->total_cost;
+
+            break;
+        }
+
+        // last buyer
+        if (buyer_ptr->nextBuyer == NULL) {
+            buyer_ptr->nextBuyer = new_buyer;
+            break;
+        }
+
+        buyer_ptr = buyer_ptr->nextBuyer;
+    } while (buyer_ptr != NULL);
+
 }
