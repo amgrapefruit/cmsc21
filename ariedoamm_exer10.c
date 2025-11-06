@@ -235,7 +235,7 @@ void buyItem(buyer **buyers_head, groceryItems *grocery_head) {
 
     // display item choices
     printf("\n-------- GROCERY ITEMS AVAILABLE --------\n");
-viewItems(grocery_head);
+
     // traverse grocery items linked list
     groceryItems *item_ptr = grocery_head;
     for (int i = 1; item_ptr != NULL; i++) {
@@ -335,8 +335,9 @@ viewItems(grocery_head);
             buyer_ptr = buyer_ptr->nextBuyer;
         } 
 
-    printf("\nSuccessfully bought grocery item: %s\n", item_ptr->item_name);
     }
+    
+    printf("\nSuccessfully bought grocery item: %s\n", item_ptr->item_name);
 }
 
 // print out all buyers and their bought items
