@@ -411,9 +411,9 @@ void editItem(groceryItems *head) {
     int new_stock;
 
     printf("Enter new price: ");
-    scanf("%f", new_price);
+    scanf("%f", &new_price);
     printf("Enter new stock: ");
-    scanf("%i", new_stock);
+    scanf("%i", &new_stock);
 
     item_ptr->price = new_price;
     item_ptr->stock = new_stock;
@@ -459,6 +459,10 @@ void deleteItem(groceryItems **head) {
                 free(item_ptr);
                 break;
             }
+            
+            // not found, go next
+            prev = item_ptr;
+            item_ptr = item_ptr->nextItem;
         }
     }
 
