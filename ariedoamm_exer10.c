@@ -463,20 +463,26 @@ void deleteItem(groceryItems **head, buyer *buyers_head) {
     char name[30];
     scanf("%[^\n]%*c", name);
 
-    // check if buyer has bought the item
-    groceryItems *item_ptr;
+    // for check if buyer has bought the item
     buyer *buyer_ptr = buyers_head;
 
-    while (buyer_ptr != NULL) {
-
-        //item_ptr = findInCart(buyer_ptr, )
-    }
-
     // find existing item
-    item_ptr = *head;
+    groceryItems *item_ptr = *head;
 
     // delete head
     if (strcmp((*head)->item_name, name) == 0) {
+
+        // traverse buyers
+        while (buyer_ptr != NULL) {
+
+            // check if item is in buyer cart
+            if (findInCart(buyer_ptr, item_ptr) != NULL) {
+                printf("\nBought item cannot be deleted!\n");
+                return;
+            }
+
+            buyer_ptr = buyer_ptr->nextBuyer;
+        }
 
         *head = (*head)->nextItem;
         free(item_ptr);
@@ -491,6 +497,19 @@ void deleteItem(groceryItems **head, buyer *buyers_head) {
 
             // found item to be deleted
             if (strcmp(item_ptr->item_name, name) == 0) {
+                
+                // traverse buyers
+                while (buyer_ptr != NULL) {
+                    
+                    // check if item is in buyer cart
+                    if (findInCart(buyer_ptr, item_ptr) != NULL) {
+                        
+                        printf("\nBought item cannot be deleted!\n");
+                        return;
+                    }
+                    
+                    buyer_ptr = buyer_ptr->nextBuyer;
+                }
 
                 prev->nextItem = item_ptr->nextItem;
                 free(item_ptr);
