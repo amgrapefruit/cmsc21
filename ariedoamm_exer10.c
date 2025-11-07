@@ -53,7 +53,7 @@ int main() {
     groceryItems *grocery_head = NULL;
     buyer *buyers_head = NULL;
 
-    //load(&grocery_head, &buyers_head);
+    load(&grocery_head, &buyers_head);
 
     do { // repeat program until user exits
         choice = menu();
@@ -531,9 +531,79 @@ void deleteItem(groceryItems **head, buyer *buyers_head) {
     printf("\nSuccessfully deleted item!\n");
 }
 
+// get cart size of buyer (for saving)
+int getCartSize(struct cart *head) {
+
+    int count = 0;
+
+    // traverse linked list
+    struct cart *cart_ptr = head;
+
+    while (cart_ptr != NULL) {
+        count++;
+
+        cart_ptr = cart_ptr->nextItem;
+    }
+
+    return count;
+}
+
+
 // save buyers and grocery items in file
 void save(groceryItems *grocery_head, buyer *buyers_head) {
 
+    // check if there is data to be saved
+    if (grocery_head == NULL) {
+        printf("\nThere is no data to be saved.\n");
+        return;
+    }
+
+    // save items
+    FILE *items_fptr = fopen("items.txt", "w");
+
+    // traverse through items linked list
+    groceryItems *items_ptr = grocery_head;
+
+    while (items_ptr != NULL) {
+
+        // write each line per node
+        fprintf(items_fptr, "%s %.2f %d\n", items_ptr->item_name, items_ptr->price, items_ptr->stock);
+
+        items_ptr = items_ptr->nextItem;
+    }
+
+    fclose(items_fptr);
+
+    // save buyers
+    FILE *buyers_fptr = fopen("buyers.txt", "w");
+
+    // traverse through linked lists
+    buyer *buyers_ptr = buyers_head;
+    struct cart *cart_ptr = NULL;
+    int cart_size = 0;
+
+    while (buyers_ptr != NULL) {
+
+        cart_size = getCartSize(buyers_ptr->groceryItemsBought);
+        
+        // write each line per node
+        fprintf(items_fptr, "%s %d %f\n", buyers_ptr->name, cart_size, buyers_ptr->total_cost);
+
+        // get cart head of buyer
+        cart_ptr = buyers_ptr->groceryItemsBought;
+
+        // write items bought by buyer
+        for (int i = 0; i < cart_size; i++) {
+            fprintf(items_fptr, "%s\n", cart_ptr->item_bought->item_name);
+
+            // traverse
+            cart_ptr = cart_ptr->nextItem;
+        }
+
+        buyers_ptr = buyers_ptr->nextBuyer;
+    }
+
+    fclose(buyers_fptr);
 }
 
 // load buyers and grocery items from file
@@ -550,14 +620,14 @@ void load(groceryItems **grocery_head, buyer **buyers_head) {
 
     // buffers for item fields
     char item_name[30];
-    int item_price = 0;
+    float item_price = 0;
     int item_stock = 0;
 
     // pointers for traversing
-    groceryItems *grocery_tail = (groceryItems *) malloc(sizeof(groceryItems));
+    groceryItems *grocery_tail = NULL;
 
     // read lines in file
-    while (fscanf(items_fptr, "%s %d %d", item_name, &item_price, &item_stock) > 0) {
+    while (fscanf(items_fptr, "%s %f %d", item_name, &item_price, &item_stock) > 0) {
 
         // new item
         groceryItems *new_item = (groceryItems *) malloc(sizeof(groceryItems));
@@ -599,39 +669,87 @@ void load(groceryItems **grocery_head, buyer **buyers_head) {
     // buffers for items and buyers
     char buyer_name[30];
     int buyer_num_of_bought_items = 0;
-    int buyer_total_cost = 0;
+    float buyer_total_cost = 0;
 
-    // bought item uninitialized
     strcpy(item_name, "");
-    groceryItems *bought_item = *grocery_head;
+
+    // ptrs for traversing grocery items, buyers, and cart
+    groceryItems *bought_item = NULL;
+    buyer *buyer_tail = NULL;
+    struct cart *cart_tail = NULL;
 
     // read file per line
-    while (fscanf(buyers_fptr, "%s %d %d", buyer_name, &buyer_num_of_bought_items, &buyer_total_cost) > 0) {
+    while (fscanf(buyers_fptr, "%s %d %f", buyer_name, &buyer_num_of_bought_items, &buyer_total_cost) > 0) {
 
         // new buyer
         buyer *new_buyer = (buyer *) malloc(sizeof(buyer));
         strcpy(new_buyer->name, buyer_name);
         new_buyer->total_cost = buyer_total_cost;
+        new_buyer->nextBuyer = NULL;
 
-        // add items bought
+        bought_item = *grocery_head;
+        cart_tail = NULL;
+
+        // add items bought to buyer cart
         for (int i = 0; i < buyer_num_of_bought_items; i++) {
             fscanf(buyers_fptr, "%s", item_name);
 
-            // find if item exists
+            // new cart
+            struct cart *new_cart = (struct cart *) malloc(sizeof(struct cart));
+            new_cart->item_bought = NULL;
+            new_cart->nextItem = NULL;
+
+            // find item in item linked list
             while (bought_item != NULL) {
 
                 // item found
                 if (strcmp(bought_item->item_name, item_name) == 0) {
+
+                    // add to cart
+                    new_cart->item_bought = bought_item;
+
+                    // check if cart head
+                    if (cart_tail == NULL) {
+
+                        // buyer cart head points to new cart
+                        new_buyer->groceryItemsBought = new_cart;
+                    }
+
+                    // item after head
+                    else {
+                        
+                        // add new_cart to tail
+                        cart_tail->nextItem = new_cart;
+                    }
+
+                    cart_tail = new_cart;
+
                     break;
                 }
 
                 // traverse
                 bought_item = bought_item->nextItem;
             }
-
-            // item was deleted
-
         }
+
+        // buyer head
+        if (*buyers_head == NULL) {
+
+            // new buyer is the head
+            *buyers_head = new_buyer;
+        }
+
+        // after head
+        else {
+
+            // add buyer to tail
+            buyer_tail->nextBuyer = new_buyer;
+        }
+
+        // traverse
+        buyer_tail = new_buyer;
     }
+
+    fclose(buyers_fptr);
 
 }

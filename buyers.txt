@@ -1,7 +1,4 @@
-Via 2 81
-Hersheys
-Coke
-Aaron 1 56
-Hersheys
-Cinth 1 56
-Hersheys
+via 1 100.000000
+go nutt
+biya 1 65.000000
+bread
