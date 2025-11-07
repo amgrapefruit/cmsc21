@@ -39,7 +39,10 @@ void viewItems(groceryItems *grocery_head);
 void buyItem(buyer **buyers_head, groceryItems *grocery_head);
 void viewBuyers(buyer *buyers_head);
 void editItem(groceryItems *grocery_head);
-void deleteItem(groceryItems **grocery_head);
+groceryItems* findInCart(buyer *buyer, groceryItems *item);
+void deleteItem(groceryItems **grocery_head, buyer *buyer_head);
+void save(groceryItems *grocery_head, buyer *buyers_head);
+void load(groceryItems **grocery_head, buyer **buyers_head);
 
 int main() {
 
@@ -49,6 +52,8 @@ int main() {
     // heads for each node_tag
     groceryItems *grocery_head = NULL;
     buyer *buyers_head = NULL;
+
+    //load(&grocery_head, &buyers_head);
 
     do { // repeat program until user exits
         choice = menu();
@@ -68,7 +73,7 @@ int main() {
             break;
 
         case 4:
-            deleteItem(&grocery_head);
+            deleteItem(&grocery_head, buyers_head);
             break;
             
         case 5:
@@ -80,13 +85,13 @@ int main() {
             break;
             
         case 7:
-            
+            save(grocery_head, buyers_head);
             break;
         
         default: // user inputs invalid integer choice
             printf("Please input a valid choice.\n");    
-
             break;
+
         }
     } while (choice != 7);
 
@@ -421,8 +426,31 @@ void editItem(groceryItems *head) {
     printf("\nSuccessfully edited grocery item details!\n");
 }
 
+// find item in buyer cart
+groceryItems* findInCart(buyer *buyer, groceryItems *item) {
+
+    // declare and initialize cart pointer
+    struct cart *cart_ptr = (struct cart *) malloc(sizeof(struct cart));
+    cart_ptr = buyer->groceryItemsBought;
+
+    // traverse buyer cart
+    while (cart_ptr != NULL) {
+
+        // found item
+        if (cart_ptr->item_bought == item) {
+            return item;
+        }
+
+        // traverse
+        cart_ptr = cart_ptr->nextItem;
+    }
+
+    // item not found
+    return NULL;
+}
+
 // delete an existing grocery item
-void deleteItem(groceryItems **head) {
+void deleteItem(groceryItems **head, buyer *buyers_head) {
 
     // empty grocery item linked list
     if (head == NULL) {
@@ -435,8 +463,17 @@ void deleteItem(groceryItems **head) {
     char name[30];
     scanf("%[^\n]%*c", name);
 
+    // check if buyer has bought the item
+    groceryItems *item_ptr;
+    buyer *buyer_ptr = buyers_head;
+
+    while (buyer_ptr != NULL) {
+
+        //item_ptr = findInCart(buyer_ptr, )
+    }
+
     // find existing item
-    groceryItems *item_ptr = *head;
+    item_ptr = *head;
 
     // delete head
     if (strcmp((*head)->item_name, name) == 0) {
@@ -473,4 +510,109 @@ void deleteItem(groceryItems **head) {
     }
 
     printf("\nSuccessfully deleted item!\n");
+}
+
+// save buyers and grocery items in file
+void save(groceryItems *grocery_head, buyer *buyers_head) {
+
+}
+
+// load buyers and grocery items from file
+void load(groceryItems **grocery_head, buyer **buyers_head) {
+    
+    // load items
+    FILE* items_fptr = fopen("items.txt", "r");
+
+    // check if file is found
+    if (items_fptr == NULL) {
+        printf("Found no save file");
+        return;
+    }
+
+    // buffers for item fields
+    char item_name[30];
+    int item_price = 0;
+    int item_stock = 0;
+
+    // pointers for traversing
+    groceryItems *grocery_tail = (groceryItems *) malloc(sizeof(groceryItems));
+
+    // read lines in file
+    while (fscanf(items_fptr, "%s %d %d", item_name, &item_price, &item_stock) > 0) {
+
+        // new item
+        groceryItems *new_item = (groceryItems *) malloc(sizeof(groceryItems));
+        strcpy(new_item->item_name, item_name);
+        new_item->price = item_price;
+        new_item->stock = item_stock;
+        new_item->nextItem = NULL;
+
+        // head item
+        if (*grocery_head == NULL) {
+            
+            // head points at new item
+            *grocery_head = new_item;
+        }
+
+        // item after head
+        else {
+
+            // add new_item to tail
+            grocery_tail->nextItem = new_item;
+        }
+
+        // traverse
+        grocery_tail = new_item;
+        
+    }
+
+    fclose(items_fptr);
+
+    // load buyers
+    FILE *buyers_fptr = fopen("buyers.txt", "r");
+
+    // check if file is found
+    if (buyers_fptr == NULL) {
+        printf("Found no save file");
+        return;
+    }
+
+    // buffers for items and buyers
+    char buyer_name[30];
+    int buyer_num_of_bought_items = 0;
+    int buyer_total_cost = 0;
+
+    // bought item uninitialized
+    strcpy(item_name, "");
+    groceryItems *bought_item = *grocery_head;
+
+    // read file per line
+    while (fscanf(buyers_fptr, "%s %d %d", buyer_name, &buyer_num_of_bought_items, &buyer_total_cost) > 0) {
+
+        // new buyer
+        buyer *new_buyer = (buyer *) malloc(sizeof(buyer));
+        strcpy(new_buyer->name, buyer_name);
+        new_buyer->total_cost = buyer_total_cost;
+
+        // add items bought
+        for (int i = 0; i < buyer_num_of_bought_items; i++) {
+            fscanf(buyers_fptr, "%s", item_name);
+
+            // find if item exists
+            while (bought_item != NULL) {
+
+                // item found
+                if (strcmp(bought_item->item_name, item_name) == 0) {
+                    break;
+                }
+
+                // traverse
+                bought_item = bought_item->nextItem;
+            }
+
+            // item was deleted
+
+        }
+    }
+
 }
